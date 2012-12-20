@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <string name="app_name">BITS TrackApp</string>
+    <string name="limits">MAX data Limits - Daily(KB)/Monthly(MB)</string>
+    <string name="stats">Data Usage: daily(kb)/monthly(mb)</string>
+    <string name="SettingsId">Name</string>
+    <string name="SettingsEMail">Your Email Id</string>
+    <string name="SettingsServerUri">Upload Location (do not change)</string>
+    <string name="SettingsPostal">Your Contact Details</string>
+    <string name="AnonymousUploads">Mask Location etc.</string>
+    <string name="bitsapp">BITS TRACK APP</string>
+
+</resources>

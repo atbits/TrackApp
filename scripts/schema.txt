@@ -1,0 +1,35 @@
+
+
+GRANT USAGE ON *.* TO 'bits'@'localhost' IDENTIFIED BY 'fixit';
+
+
+CREATE DATABASE data;
+
+CREATE TABLE User 
+(
+Id INT AUTO_INCREMENT,
+Name VARCHAR(64),
+EmailAddress VARCHAR(64),
+PhoneNumber VARCHAR(32),
+location VARCHAR(64),
+lastupload VARCHAR(64),
+DeviceId VARCHAR(64),
+filename VARCHAR(64),
+PRIMARY KEY (Id)
+);
+
+CREATE TABLE LogUploads
+(
+Id INT AUTO_INCREMENT,
+UploadTime VARCHAR(32),
+DevId VARCHAR(64),
+NumEntries INT,
+FileName VARCHAR(64),
+SwVersion VARCHAR(32),
+NWOperator VARCHAR(32),
+StartTime VARCHAR(32),
+EndTime VARCHAR(32),
+longitude VARCHAR(64),
+latitude VARCHAR(64),
+PRIMARY KEY (Id)
+);

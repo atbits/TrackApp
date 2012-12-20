@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:weightSum="1" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/linearLayoutLimit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:orientation="vertical">
+        <TextView android:text="@string/bitsapp" android:id="@+id/textView1"   
+         android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView android:text="Name(Mandatory)" android:id="@+id/textViewLabelStats" android:layout_height="wrap_content" android:layout_gravity="clip_horizontal" android:layout_width="wrap_content"></TextView>
+         
+    </LinearLayout>
+    
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:baselineAligned="true" android:orientation="horizontal">
+        <EditText android:inputType="textPersonName" android:layout_height="wrap_content" android:id="@+id/editIdName" android:layout_gravity="clip_horizontal" android:layout_width="wrap_content" android:layout_weight="0.36"></EditText>
+</LinearLayout>
+
+    <TextView
+        android:id="@+id/textViewLabelEMail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your Email Id(Mandatory)" android:layout_gravity="clip_horizontal"/>
+    <EditText android:id="@+id/editEMail" android:layout_height="wrap_content" android:layout_width="match_parent" android:inputType="textEmailAddress" android:layout_gravity="clip_horizontal">
+        <requestFocus></requestFocus>
+    </EditText>
+    <TextView android:id="@+id/textViewServerUri" android:text="City " android:layout_height="wrap_content" android:layout_width="79dp" android:layout_gravity="left"></TextView>
+
+    <EditText
+        android:id="@+id/editUri"
+        android:inputType="textUri" android:layout_width="match_parent" android:layout_gravity="clip_horizontal" android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/textViewPostal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your Phone Number(Mandatory)" android:layout_gravity="left"/>
+    <EditText android:id="@+id/editPosalAddress" android:layout_width="match_parent" android:inputType="phone" android:layout_height="wrap_content"></EditText>
+    <TextView android:text="Mask Location." android:layout_width="wrap_content" android:id="@+id/textViewAnonymous" android:layout_height="wrap_content" android:gravity="center" android:layout_gravity="center"></TextView>
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:weightSum="1" android:orientation="vertical">
+        <ToggleButton android:text="ToggleAnonymousButton" android:id="@+id/toggleButton1" android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="26dp"></ToggleButton>
+    
+
+
+    </LinearLayout>
+    <Button android:id="@+id/button2" android:text="UPDATE" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="32dp"></Button>
+    <Button android:id="@+id/button1" android:text="SUBMIT" android:layout_width="112dp" android:layout_gravity="center" android:layout_height="34dp"></Button>
+
+</LinearLayout>
