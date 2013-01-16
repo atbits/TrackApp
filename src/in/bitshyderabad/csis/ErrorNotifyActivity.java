@@ -1,0 +1,19 @@
+package in.bitshyderabad.csis;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.widget.TextView;
+
+public class ErrorNotifyActivity extends Activity {
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.notificationact);
+    String msg = getIntent().getExtras().getString("text");
+    if(null != msg){
+    	TextView text = (TextView) findViewById(R.id.textViewNotification);
+    	text.setText(msg);
+    }
+  }
+  // TBD add logic to dismiss the notification after it is read by user:US + Extras related changes
+} 

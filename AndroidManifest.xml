@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="in.bitshyderabad.csis" android:versionCode="1" android:versionName="1.0">
-	<uses-sdk android:minSdkVersion="8" />
+	package="in.bitshyderabad.csis" android:versionCode="2" android:versionName="1.2">
+	<uses-sdk android:minSdkVersion="15" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET"/>
@@ -9,32 +9,28 @@
  	<uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" /> 
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 	<uses-permission android:name="android.permission.GET_TASKS" />
+	<uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
-	<application android:icon="@drawable/icon" android:label="@string/app_name">
-		<activity android:name="in.bitshyderabad.csis.ACTIVITY" android:label="@string/app_name">
+	<application android:icon="@drawable/icon" android:label="@string/app_name" android:allowBackup="true">
+		<activity android:name="in.bitshyderabad.csis.MainActivity" android:label="@string/app_name">
 			<intent-filter>
 			 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
-		    			
 		</activity>
-		<activity android:name="in.bitshyderabad.csis.AndroidNotification" >
-			<intent-filter>
-			 <action android:name="com.wissen.startatboot.AndroidNotification" />
-               
-			</intent-filter>
-		    			
+
+		<activity android:name="in.bitshyderabad.csis.ErrorNotifyActivity" android:label="@string/app_name">
 		</activity>
+
 		<receiver android:name="in.bitshyderabad.csis.MyStartupIntentReceiver">
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
 				<category android:name="android.intent.category.HOME" />
 			</intent-filter>
 		</receiver>
-		<service android:name="in.bitshyderabad.csis.MyService">
+		<service android:name="in.bitshyderabad.csis.TrackService">
 			<intent-filter>
-				<action android:name="com.wissen.startatboot.MyService" />
-				<action android:name="in.bitshyderabad.csis.MyService" />
+				<action android:name="in.bitshyderabad.csis.TrackService" />
 			</intent-filter>
 		</service>
 		

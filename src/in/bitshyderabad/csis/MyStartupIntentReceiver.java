@@ -8,7 +8,7 @@ public class MyStartupIntentReceiver extends BroadcastReceiver{
 @Override
 public void onReceive(Context context, Intent intent) {
 	Intent serviceIntent = new Intent();
-	serviceIntent.setAction("com.wissen.startatboot.MyService");
+	serviceIntent.setAction("in.bitshyderabad.csis.TrackService");
 	context.startService(serviceIntent);
 }
 }
