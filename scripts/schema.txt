@@ -1,9 +1,9 @@
 
+CREATE DATABASE data;
 
 GRANT USAGE ON *.* TO 'bits'@'localhost' IDENTIFIED BY 'fixit';
 
 
-CREATE DATABASE data;
 
 CREATE TABLE User 
 (

@@ -1,3 +1,0 @@
-<?
-print "newversion: implementaion pending";
-?>

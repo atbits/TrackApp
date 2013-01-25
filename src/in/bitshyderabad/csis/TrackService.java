@@ -21,6 +21,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
@@ -48,10 +49,12 @@ public class TrackService extends Service {
 
 	private Handler mHandler = new Handler();
 
-	static TrackService serviceRef =null;
 	String devIdentity = null;
 	static TAContext ctx = null;
-	static String MY_TAG="TrackSrvc";
+	static final String MY_TAG="TrackSrvc";
+	static final String excpFileName = "ErrorFile.txt"; 
+
+    String folderPath = null;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -61,8 +64,25 @@ public class TrackService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		serviceRef = this;
 		Log.d(MY_TAG,"Service STARTED");
+	    String packageName = this.getPackageName().trim();
+	    folderPath = Environment.getExternalStorageDirectory().getAbsolutePath() + 
+	    								"/Android/data/" + packageName + "/files/";
+
+		try {
+		    File folder  = new File(folderPath);
+		    boolean exists = folder.exists();
+		    if (!exists) 
+		        folder.mkdirs();
+		    File exptFile = new File(folderPath + excpFileName);
+		    if(exptFile.length()>0){
+		    	exptFile.renameTo(new File (folderPath + excpFileName + ".old"));
+		    	Log.w(MY_TAG, "Old exception log file renamed");
+		    }
+		} catch (Exception e){
+			Toast.makeText(this, "Folder Create" + e.getMessage(), Toast.LENGTH_LONG).show();
+			Log.e(MY_TAG, "Folder Create" + e.getMessage());
+		}
 		ctx = TAContext.createContextFromPersistedData(this);
 		mHandler.postDelayed(mRunnable, 10000);
 	}
@@ -76,9 +96,9 @@ public class TrackService extends Service {
 		Log.d(MY_TAG, "Service Destroyed");
 	}
 
+	private int errNotifyId = 2;
 	public void displaySrvcErrorNotification(String msg, Exception e)
 	{
-		final int MY_NOTIFICATION_ID=2;
 		NotificationManager notificationManager;
 		Notification myNotification;
 		final String notificationTitle = "TrackAppExcpt";
@@ -89,48 +109,63 @@ public class TrackService extends Service {
 					":" + stElArr[i].getLineNumber() + "\n"; 
 		}
 		
-	    Intent intent = new Intent(serviceRef, ErrorNotifyActivity.class);
+	    Intent intent = new Intent(this, ErrorNotifyActivity.class);
 	    intent.putExtra("text", text);
-	    PendingIntent pIntent = PendingIntent.getActivity(serviceRef, 0, intent, 0);
+	    PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, 0);
 	    
 
 		Log.e(MY_TAG, text);
 		notificationManager =(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-		Notification.Builder notifBuild = new Notification.Builder(serviceRef.getBaseContext());
+		Notification.Builder notifBuild = new Notification.Builder(getBaseContext());
 		notifBuild.setContentTitle(notificationTitle);
 		//notifBuild.setContentText(text);
 		notifBuild.setContentText(text);
 		notifBuild.setSmallIcon(R.drawable.icon);
 		notifBuild.setContentIntent(pIntent);
+		
+		
 		//notifBuild.addAction(R.drawable.icon,"More",pIntent);
 		
 		myNotification = notifBuild.getNotification(); // deprecated by build in API 16 and above
 		myNotification.defaults |= Notification.DEFAULT_SOUND;
 		myNotification.flags |= Notification.FLAG_AUTO_CANCEL;
-		notificationManager.notify(MY_NOTIFICATION_ID, myNotification);
+		
+		notificationManager.notify(errNotifyId++, myNotification);
+
+		if(errNotifyId > 3) errNotifyId = 3; // do not cause too many notifications
+		appendToExternalStorageErrFile(text);
+		
 	}
 
-	void displaySwUpdateNotification()
-	{
-		final int MY_NOTIFICATION_ID=1;
-		NotificationManager notificationManager;
-		Notification myNotification;
-		final String notificationTitle = "BITS TRACK APP NEW UPDATE";
-		final String notificationText = "visit 172.16.100.162/"; // TBD URL should be an Argument based on response or move to Values file
-		final String myBlog = "http://universe.bits-pilani.ac.in/hyderabad/abhishekthakur/StudentProjects";
+	 String appendToExternalStorageErrFile(String msg) {
+		    File                file            = null;
+		    FileOutputStream    fOut            = null;
 
-		notificationManager =(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-		Notification.Builder notifBuild = new Notification.Builder(serviceRef.getBaseContext());
-		notifBuild.setContentTitle(notificationTitle);
-		notifBuild.setContentText(notificationText + "refer to " + myBlog + "for more details.");
-		notifBuild.setSmallIcon(R.drawable.icon);
-		myNotification = notifBuild.getNotification(); // deprecated by build in API 16 and above
-		myNotification.defaults |= Notification.DEFAULT_SOUND;
-		myNotification.flags |= Notification.FLAG_AUTO_CANCEL;
-		notificationManager.notify(MY_NOTIFICATION_ID, myNotification);
-
-	}
-
+		    try {
+		        try {
+		                file = new File(folderPath + excpFileName);
+		                if (file != null && file.length() < (1024 * 16)) {
+		                    fOut = new FileOutputStream(file,true);
+		                    if (fOut != null) {
+		                        fOut.write(msg.getBytes());
+		                    }
+		                }
+		        } catch (Exception e) {
+		            Toast.makeText(this, "Append to Error File" + e.getMessage(), Toast.LENGTH_LONG).show();
+		        }
+		        return file.getAbsolutePath();
+		    } finally {
+		        if (fOut != null) {
+		            try {
+		                fOut.flush();
+		                fOut.close();
+		            } catch (Exception e) {
+		                Toast.makeText(this, "Append To Log File" + e.getMessage(), Toast.LENGTH_LONG).show();
+		            }
+		        }
+		    }
+		}
+	 
 	public String getCurrDate()	{
 		Date cal = Calendar.getInstance().getTime();
 		return DateFormat.getDateTimeInstance().format(cal); 
@@ -175,7 +210,7 @@ public class TrackService extends Service {
 
 		private boolean isWifi()
 		{
-			NetworkInfo active_network=((ConnectivityManager)serviceRef.getSystemService(TrackService.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+			NetworkInfo active_network=((ConnectivityManager)getSystemService(TrackService.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
 			if (active_network!=null && active_network.isConnectedOrConnecting())
 			{	
 				if (active_network.getType()==ConnectivityManager.TYPE_WIFI)
@@ -188,29 +223,19 @@ public class TrackService extends Service {
 		void initData(){
 			getDeviceName();
 			try {
-				String pkg = serviceRef.getPackageName();
-				version = serviceRef.getPackageManager().getPackageInfo(pkg, 0).versionName;
+				String pkg = getPackageName();
+				version = getPackageManager().getPackageInfo(pkg, 0).versionName;
 			} catch (NameNotFoundException e) {
 				version = "?";
 			}
 		}
 
-		//
-		// This function invoked every delayTimeMilliSec
-		// data init needed only on first run.
-		//
 		public void run() {
-
 			if(devIdentity==null) {
 				initData();
 				// recover the serialized context
 			}
-			
 			ctx.doSampling();
-
-			if(ctx.timeToChwckAppUpdate()) 
-				new CheckAppUpdate().execute(version); // will be removed once we are in App Store
-			
 
 			if(ctx.shouldCreateLogFile()){
 				String fileName = ctx.saveLogs();
@@ -241,7 +266,7 @@ public class TrackService extends Service {
 			protected Long doInBackground(String... strings ){
 				HttpClient httpclient = new DefaultHttpClient();
 				Log.d("LogUpdateAsyncTask", "coming in with argcount=" + strings.length);
-				HttpPost httppost = new HttpPost("http://172.16.100.162/android/scripts/logupdate.php");
+				HttpPost httppost = new HttpPost(MainActivity.BASE_URL + "logupdate.php");
 
 				Log.d(MY_TAG, "logupdate.php: Possible SQL command is INSERT INTO LogUploads  VALUES('','" + strings[0] +
 						"','" +strings[1]+ "','" +strings[2]+ "','" +strings[3]+ "','" +strings[4]+
@@ -333,8 +358,8 @@ public class TrackService extends Service {
 				for(int i=lastuploadwifi;i<currUploadIndex;i++)
 				{
 					// compress the file currentFilePath
-					String xmlFileName = devIdentity+i +".xml";
-					String localFileName = "/data/data/in.bitshyderabad.csis/files/"+xmlFileName;
+					String xmlFileName = devIdentity+"-" + i +".xml";
+					String localFileName =folderPath +xmlFileName;
 					File file=new File(localFileName);
 					if(file.length()>100) { // XML exists - zip it 
 						zip(localFileName);
@@ -342,27 +367,18 @@ public class TrackService extends Service {
 					}
 					
 					// upload the zipped file
-					String fileName = devIdentity+i +".xml.zip";
-					localFileName = "/data/data/in.bitshyderabad.csis/files/"+fileName;
+					String fileName = devIdentity+ "-" +i +".xml.zip";
+					localFileName = folderPath+fileName;
 					String date = getCurrDate();
 					file=new File(localFileName);
-					int size=(int) (file.length()/1024) +1;
 					if(file.length() > 100) { // discard non-existent / small size files
-						new DoFileUpload().execute(localFileName);
+						new DoFileUpload().execute(localFileName, Integer.toString(i));
 						postdata(date,devIdentity,	Integer.toString(i),fileName,
 								version,ctx.get_network(),date/*should be log start time */,
 								date,ctx.getCurrentLocation(),ctx.getCurrentLocation()); 
 						// TBD remove second location in PHP and here
-						
-						int tempsize=Integer.parseInt(LoadPreferences("bandwidth"));
-						tempsize+=size;
-						SavePreferences("bandwidth",String.valueOf(tempsize));
-						if( file.delete())
-						{
-							Log.d(MY_TAG, "file delete succesfull" + file.getName());
-						}
 					}
-					SavePreferences("fileuploads",Integer.toString(i) );
+					
 				}
 			}
 			else
@@ -376,6 +392,7 @@ public class TrackService extends Service {
 
 		class DoFileUpload extends AsyncTask<String, Integer, Long>{
 
+			
 			protected Long doInBackground(String... strings ){
 				HttpURLConnection connection = null;
 				DataOutputStream outputStream = null;
@@ -383,8 +400,9 @@ public class TrackService extends Service {
 				DataInputStream inputStream = null;
 
 				String pathToOurFile = strings[0];
+				String fileIndex = strings[1];
 				Log.d("upload",strings[0]);
-				String urlServer = "http://172.16.100.162/android/scripts/uploadfile.php";
+				String urlServer = MainActivity.BASE_URL + "uploadfile.php";
 				String lineEnd = "\r\n";
 				String twoHyphens = "--";
 				String boundary =  "*****";
@@ -433,57 +451,31 @@ public class TrackService extends Service {
 
 					outputStream.writeBytes(lineEnd);
 					outputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+					fileInputStream.close();
+					outputStream.flush();
+					outputStream.close();
 
 					// Responses from the server (code and message)
 					int respCode = connection.getResponseCode();
 					String respMsg = connection.getResponseMessage();
 					Log.d(MY_TAG, pathToOurFile + "success in  uploadfile.php "  + respCode + "\nMessage:" +respMsg);
-
-					fileInputStream.close();
-					outputStream.flush();
-					outputStream.close();
-				}
-				catch (Exception ex)
+					SavePreferences("fileuploads",fileIndex );
+				} catch (Exception ex)
 				{
 					displaySrvcErrorNotification(pathToOurFile +"uploadfile.php",ex);
+				} finally {
+					File file = new File(pathToOurFile);
+					int tempsize=Integer.parseInt(LoadPreferences("bandwidth"));
+					tempsize+=(file.length()/1024) + 1;
+					SavePreferences("bandwidth",String.valueOf(tempsize));
+					if( file.delete())
+					{
+						Log.d(MY_TAG, "file delete succesfull" + file.getName());
+					}
+
 				}
 				return null;
 			}
 		}
-
-
-
-		class CheckAppUpdate extends AsyncTask<String, Integer, Long>{
-			boolean notify =false;
-
-			protected Long doInBackground(String... strings ){
-				HttpClient httpclient = new DefaultHttpClient();
-				HttpPost httppost = new HttpPost("http://172.16.100.162/android/scripts/updateversion.php");
-
-				try {
-					// Add your data
-					List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
-					nameValuePairs.add(new BasicNameValuePair("currentversion", strings[0]));
-					httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-
-					// Execute HTTP Post Request
-					HttpResponse response = httpclient.execute(httppost);
-					String res=EntityUtils.toString(response.getEntity());
-					Log.d("serverresponse",res);
-					if(res.equals("update"))
-					{
-						notify = true;
-					}
-				} catch (Exception e) {
-					displaySrvcErrorNotification("Check for Version Update",e);
-				} 
-				return null;
-			}
-
-			protected void onPostExecute(Long result){
-				if(notify)displaySwUpdateNotification();
-			}
-		}
-
 	};
 }

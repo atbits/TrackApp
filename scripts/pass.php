@@ -1,6 +1,7 @@
 <?php
 $username="bits";
-$password="tofix";
+$password="toFix";
 $db_name="data";
 $host="localhost";
 ?>
+

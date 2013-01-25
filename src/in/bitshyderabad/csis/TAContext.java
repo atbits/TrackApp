@@ -21,9 +21,14 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.TrafficStats;
+import android.telephony.CellLocation;
+import android.telephony.TelephonyManager;
+import android.telephony.cdma.CdmaCellLocation;
+import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 import android.util.Xml;
 import android.os.Bundle;
+import android.os.SystemClock;
 
 import org.xmlpull.v1.XmlSerializer;
 
@@ -35,7 +40,7 @@ class TAContext{
 	final private long RX_TX_TSH = 32/DEBUG_SPEED; //min 32*8 =256 kbps for streaming; some audio streams will go under this   
 	final private int FAST_SAMPLE = 2000/DEBUG_SPEED; // Three seconds
 	final private int SLOW_SAMPLE = 16 * FAST_SAMPLE; // Thirty seconds
-	final private int NUMBER_NODES=200/DEBUG_SPEED; // Entries in XML before upload
+	final private int NUMBER_NODES=500/DEBUG_SPEED; // Entries in XML before upload
 
 	static ActivityManager actMgr = null;
 	private static TrackService svcRef = null ;
@@ -157,9 +162,9 @@ class TAContext{
 
 		if(sampleNum%(1 + 5/DEBUG_SPEED)==0)
 			Log.d("DetMet","mRx=" + df.format(mAvgRX) +" :mTX="+ df.format(mAvgTX)+
-				" :NZSC="+Integer.toString(nonZeroSampleCount) + " :txKBps=" + txBytesKBps + 
-				" :rxKBps=" + rxBytesKBps+ " :Delay="+delayTimeMilliSec+ " :numSpeed=" + 
-				sIC.getCount()+" :numSvcAct=" +sAC.getCount()+ " :stream="+isStreaming);
+				" :NZSC="+Integer.toString(nonZeroSampleCount) + " :tx=" + txBytesKBps + 
+				" :rx=" + rxBytesKBps+ " :Delay="+delayTimeMilliSec+ " : #Spd=" + 
+				sIC.getCount()+" :#SAE=" +sAC.getCount()+ " :stream="+isStreaming);
 
 		if((nonZeroSampleCount > (NumSamples/3)) && ((mAvgRX + mAvgTX) >(1.2 * RX_TX_TSH)) && (!isStreaming)){
 			isStreaming = true;
@@ -181,13 +186,6 @@ class TAContext{
 		}
 	}
 	
-	/**
-	 * 
-	 */
-	boolean timeToChwckAppUpdate()
-	{
-		return false; // TBD - check if last check was more than 24 hours ago
-	}
 	
 	String get_network()
 	{
@@ -207,11 +205,10 @@ class TAContext{
 	String saveLogs() 
 	{
 		FileOutputStream fileos=null;
-		String currentFilePath=("/data/data/in.bitshyderabad.csis/files/").trim()+
-				svcRef.getDevIdentity()+LoadPreferences("createdFileIdx")+".xml";
+		String currentFilePath=svcRef.folderPath+ svcRef.getDevIdentity()+"-" + LoadPreferences("createdFileIdx")+".xml";
 		
 		try {
-			Log.d(MY_TAG,"logStreamStart");
+			Log.d(MY_TAG,"logStreamCreating");
 			fileos = new FileOutputStream(currentFilePath);
 			int index = Integer.parseInt(LoadPreferences("createdFileIdx"))+1;
 			SavePreferences("createdFileIdx",Integer.toString(index) );
@@ -234,10 +231,27 @@ class TAContext{
 	
 			sAC.appendXmlEntries(serializer);
 			sIC.appendXmlEntries(serializer);
+
+			serializer.startTag(null, "other");
+			String txt = Long.toString(SystemClock.elapsedRealtime()/1000) +" " +Long.toString(SystemClock.uptimeMillis()/1000);
+			TelephonyManager tm = (TelephonyManager) svcRef.getSystemService(Context.TELEPHONY_SERVICE);
+			CellLocation cl =  tm.getCellLocation();
+			if(cl instanceof CdmaCellLocation) {
+				CdmaCellLocation loc = (CdmaCellLocation)cl;
+				txt += "lat:" + loc.getBaseStationLatitude () + "long:" + loc.getBaseStationLongitude() +
+						"sys:" + loc.getSystemId() + "net:" + loc.getNetworkId() + "id:" + loc.getBaseStationId();
+			}
+			if(cl instanceof GsmCellLocation) {
+				GsmCellLocation loc = (GsmCellLocation)cl;
+				txt += ":lac=" + loc.getLac() + ":cid=" + loc.getCid() ;
+			}  
+			serializer.text(txt);
+			serializer.endTag(null, "other");
 	
 			serializer.endTag(null, "Logfile");
 			serializer.endDocument();
 			serializer.flush();
+			Log.d(MY_TAG,"logStreamCreating");
 		} catch (Exception e) {
 			svcRef.displaySrvcErrorNotification("XmlSerializer ",e);
 		}

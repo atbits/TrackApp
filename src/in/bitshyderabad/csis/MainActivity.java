@@ -56,6 +56,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
 	IntentFilter intentFilter;
 	HttpPost httppost=null;
 	TextView text;
+	public static final String BASE_URL = "http://54.251.45.254/android/scripts/";
 
 	String getAppBuildTime(){
 		String timeStr = "unknown";
@@ -291,14 +292,14 @@ public class MainActivity extends Activity implements View.OnClickListener{
 		protected void onProgressUpdate(Integer... progress){ /* does nothing */}
 		protected void onPostExecute(Long result){/* does nothing */}
 	}
-	
+
 	public void RegisterUser(String s1,String s2,String s3,String s4,String s5,String s6) {
 		// Create a new HttpClient and Post Header
 		HttpClient httpclient = new DefaultHttpClient();
 		if(s6.equals("register"))
-			httppost = new HttpPost("http://172.16.100.162/android/scripts/user.php");
+			httppost = new HttpPost(BASE_URL + "user.php");
 		else
-			httppost = new HttpPost("http://172.16.100.162/android/scripts/updateuser.php");
+			httppost = new HttpPost(BASE_URL + "updateuser.php");
 
 		try {
 			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(5);

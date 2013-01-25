@@ -15,5 +15,5 @@ public class ErrorNotifyActivity extends Activity {
     	text.setText(msg);
     }
   }
-  // TBD add logic to dismiss the notification after it is read by user:US + Extras related changes
+
 } 
